@@ -12,11 +12,25 @@ for (const key of ["MONGO_URI", "JWT_SECRET", "GEMINI_API_KEY"]) {
 if (!process.env.MONGO_URI) process.exit(1);
 
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://codementor-ai-1-lwt3.onrender.com",
+];
+
 app.use(
   cors({
-    origin: (process.env.CLIENT_URL || "http://localhost:5173")
-      .split(",")
-      .map((s) => s.trim().replace(/\/$/, "")),
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 app.use(express.json({ limit: "1mb" }));
